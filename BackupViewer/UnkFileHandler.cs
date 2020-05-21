@@ -16,24 +16,23 @@ namespace BackupViewer
         }
         public void Handle(string pathIn, string pathOut, HybridDictionary decryptMaterialDict, Decryptor decryptor)
         {
-            if (unkFiles.Count > 0)
-            {
-                string dataUnkDir = Path.Combine(pathOut, "misc");
-                Directory.CreateDirectory(dataUnkDir);
+            if (unkFiles.Count <= 0) return;
+            
+            string dataUnkDir = Path.Combine(pathOut, "misc");
+            Directory.CreateDirectory(dataUnkDir);
 
-                foreach (string entry in unkFiles)
+            foreach (string entry in unkFiles)
+            {
+                string commonPath = FindCommonPath(new List<string>()
                 {
-                    string commonPath = FindCommonPath(new List<string>()
-                    {
-                        entry,
-                        pathIn
-                    });
-                    string relativePath = entry.Replace(commonPath, "");
-                    relativePath = relativePath.TrimStart(new char[] {'\\', '/'});
-                    string destFile = Path.Combine(dataUnkDir, relativePath);
-                    Directory.CreateDirectory(Directory.GetParent(destFile).FullName);
-                    File.Copy(entry, destFile);
-                }
+                    entry,
+                    pathIn
+                });
+                string relativePath = entry.Replace(commonPath, "");
+                relativePath = relativePath.TrimStart(new char[] {'\\', '/'});
+                string destFile = Path.Combine(dataUnkDir, relativePath);
+                Directory.CreateDirectory(Directory.GetParent(destFile).FullName);
+                File.Copy(entry, destFile);
             }
         }
         

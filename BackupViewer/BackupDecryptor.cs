@@ -54,11 +54,11 @@ namespace BackupViewer
                 string filename = Path.GetFileName(entry);
                 if (filename.ToLower() == "info.xml")
                 {
-                    decryptMaterialDict = ParseXml.parse_info_xml(entry, ref decryptor, decryptMaterialDict);
+                    decryptMaterialDict = ParseXml.ParseInfoXml(entry, ref decryptor, decryptMaterialDict);
                 }
                 else
                 {
-                    decryptMaterialDict = ParseXml.parse_xml(entry, decryptMaterialDict);
+                    decryptMaterialDict = ParseXml.ParseXML(entry, decryptMaterialDict);
                 }
             }
 

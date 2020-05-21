@@ -13,8 +13,9 @@ namespace BackupViewer
             {
                 inputStream.Read(buffer, 0, 100);
                 var name = Encoding.ASCII.GetString(buffer).Trim('\0', ' ');
-                if (String.IsNullOrWhiteSpace(name))
-                    break;
+                
+                if (String.IsNullOrWhiteSpace(name)) break;
+                
                 inputStream.Seek(24, SeekOrigin.Current);
                 inputStream.Read(buffer, 0, 12);
 
@@ -35,7 +36,9 @@ namespace BackupViewer
                 if (size > 0) // ignores directory entries
                 {
                     if (!Directory.Exists(Path.GetDirectoryName(output)))
+                    {
                         Directory.CreateDirectory(Path.GetDirectoryName(output));
+                    }
                     using (var str = File.Open(output, FileMode.OpenOrCreate, FileAccess.Write))
                     {
                         var buf = new byte[size];
@@ -48,7 +51,9 @@ namespace BackupViewer
 
                 var offset = 512 - (pos % 512);
                 if (offset == 512)
+                {
                     offset = 0;
+                }
 
                 inputStream.Seek(offset, SeekOrigin.Current);
             }

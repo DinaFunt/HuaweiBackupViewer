@@ -13,12 +13,18 @@ namespace BackupViewer
             {
                 int hashLength = hmac.HashSize / 8;
                 if ((hmac.HashSize & 7) != 0)
+                {
                     hashLength++;
+                }
                 int keyLength = dklen / hashLength;
                 if (dklen > (0xFFFFFFFFL * hashLength) || dklen < 0)
+                {
                     throw new ArgumentOutOfRangeException("dklen");
+                }
                 if (dklen % hashLength != 0)
+                {
                     keyLength++;
+                }
                 byte[] extendedkey = new byte[salt.Length + 4];
                 Buffer.BlockCopy(salt, 0, extendedkey, 0, salt.Length);
                 using (var ms = new MemoryStream())
@@ -90,9 +96,9 @@ namespace BackupViewer
                     counterEncryptor.TransformBlock(
                         counter, 0, counter.Length, counterModeBlock, 0);
 
-                    for (var i2 = counter.Length - 1; i2 >= 0; i2--)
+                    for (var i = counter.Length - 1; i >= 0; i--)
                     {
-                        if (++counter[i2] != 0)
+                        if (++counter[i] != 0)
                         {
                             break;
                         }

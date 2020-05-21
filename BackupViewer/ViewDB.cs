@@ -10,6 +10,7 @@ namespace BackupViewer
     {
         private const String GetTableNames = "Select name From sqlite_master where type='table' order by name;";
         private string ConnectionString { get; set; }
+
         public ViewDB(String path)
         {
             InitializeComponent();
@@ -38,39 +39,38 @@ namespace BackupViewer
 
         private void treeView_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
         {
-            if (e.Node.Name.EndsWith(".db"))
-            {
-                String file = e.Node.Name;
-                ConnectionString = $"Data Source={file};Compress=True;";
-                SQLiteConnection myConnection = new SQLiteConnection(ConnectionString);
-                
-                myConnection.Open();
-                
-                SQLiteCommand getTables = new SQLiteCommand(GetTableNames, myConnection);
-                
-                SQLiteDataAdapter myCountAdapter = new SQLiteDataAdapter(getTables);
-                DataTable f = new DataTable();
-                myCountAdapter.Fill(f);
-                bindingSource.DataSource = f;
-                listBox.DataSource = bindingSource;
-                listBox.DisplayMember = "name";
+            if (!e.Node.Name.EndsWith(".db")) return;
+            
+            String file = e.Node.Name;
+            ConnectionString = $"Data Source={file};Compress=True;";
+            SQLiteConnection myConnection = new SQLiteConnection(ConnectionString);
 
-                String selectFromFirstTable = $"SELECT * FROM {((DataRowView) bindingSource.Current)["name"]}";
-                SQLiteCommand getTables1 = new SQLiteCommand(selectFromFirstTable, myConnection);
-                SQLiteDataAdapter myCountAdapter1 = new SQLiteDataAdapter(getTables1);
-                DataSet myCountDataSet = new DataSet();
-                myCountAdapter1.Fill(myCountDataSet);
-                dataGridView.DataSource = myCountDataSet.Tables[0];
-                
-                myConnection.Close();
-            }
+            myConnection.Open();
+
+            SQLiteCommand getTables = new SQLiteCommand(GetTableNames, myConnection);
+
+            SQLiteDataAdapter getTableAdapter = new SQLiteDataAdapter(getTables);
+            DataTable table = new DataTable();
+            getTableAdapter.Fill(table);
+            bindingSource.DataSource = table;
+            listBox.DataSource = bindingSource;
+            listBox.DisplayMember = "name";
+
+            String selectFromFirstTable = $"SELECT * FROM {((DataRowView) bindingSource.Current)["name"]}";
+            SQLiteCommand selectFromFirstTableCommand = new SQLiteCommand(selectFromFirstTable, myConnection);
+            SQLiteDataAdapter selectFromFirstTableAdapter = new SQLiteDataAdapter(selectFromFirstTableCommand);
+            DataSet myCountDataSet = new DataSet();
+            selectFromFirstTableAdapter.Fill(myCountDataSet);
+            dataGridView.DataSource = myCountDataSet.Tables[0];
+
+            myConnection.Close();
         }
 
         private void FillDataGrid(String tableName)
         {
             SQLiteConnection myconnection = new SQLiteConnection(ConnectionString);
             myconnection.Open();
-            
+
             SQLiteCommand getTableData =
                 new SQLiteCommand($"Select * From {tableName};", myconnection);
 
@@ -78,10 +78,11 @@ namespace BackupViewer
             DataSet myCountDataSet = new DataSet();
             myCountAdapter1.Fill(myCountDataSet);
             dataGridView.DataSource = myCountDataSet.Tables[0];
-            myconnection.Close(); 
+            myconnection.Close();
         }
 
-        private bool IsReturningToMainForm { get; set; } 
+        private bool IsReturningToMainForm { get; set; }
+
         private void New_Click(object sender, EventArgs e)
         {
             IsReturningToMainForm = true;
@@ -106,8 +107,11 @@ namespace BackupViewer
         private void ViewDB_FormClosing(object sender, FormClosingEventArgs e)
         {
             if (IsReturningToMainForm) return;
-            if(e.CloseReason!= CloseReason.FormOwnerClosing)
+
+            if (e.CloseReason != CloseReason.FormOwnerClosing)
+            {
                 Owner.Close();
+            }
         }
     }
 }

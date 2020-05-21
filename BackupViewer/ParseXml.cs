@@ -7,8 +7,7 @@ namespace BackupViewer
 {
     public static class ParseXml
     {
-
-        static object xml_get_column_value(XmlNode xmlNode)
+        static object XmlGetColumnValue(XmlNode xmlNode)
         {
             XmlNode child = xmlNode.FirstChild;
             if (child.Name != "value")
@@ -16,36 +15,48 @@ namespace BackupViewer
                 Console.WriteLine("xml_get_column_value: entry has no values!");
                 return null;
             }
-
             if (child.Attributes["Null"] != null)
+            {
                 return null;
+            }
             if (child.Attributes["String"] != null)
+            {
                 return child.Attributes["String"].Value;
+            }
             if (child.Attributes["Integer"] != null)
+            {
                 return Convert.ToInt32(child.Attributes["Integer"].Value);
-
+            }
+            
             Console.WriteLine("xml_get_column_value: unknown value attribute.");
             return null;
         }
 
-        static void parse_backup_files_type_info(ref Decryptor decryptor, XmlDocument xmlEntry)
+        static void ParseBackupFilesTypeInfo(ref Decryptor decryptor, XmlDocument xmlEntry)
         {
             XmlNodeList elemList = xmlEntry.GetElementsByTagName("column");
             foreach (XmlNode entry in elemList)
             {
                 string name = entry.Attributes["name"].Value;
-                if (name == "e_perbackupkey")
-                    decryptor.e_perbackupkey = xml_get_column_value(entry) as string;
-                else if (name == "pwkey_salt")
-                    decryptor.pwkey_salt = xml_get_column_value(entry) as string;
-                else if (name == "type_attch")
-                    decryptor.type_attch = Convert.ToInt32(xml_get_column_value(entry));
-                else if (name == "checkMsg")
-                    decryptor.checkMsg = xml_get_column_value(entry) as string;
+                switch (name)
+                {
+                    case "e_perbackupkey":
+                        decryptor.EPerBackupkey = XmlGetColumnValue(entry) as string;
+                        break;
+                    case "pwkey_salt":
+                        decryptor.PwkeySalt = XmlGetColumnValue(entry) as string;
+                        break;
+                    case "type_attch":
+                        decryptor.TypeAttch = Convert.ToInt32(XmlGetColumnValue(entry));
+                        break;
+                    case "checkMsg":
+                        decryptor.CheckMsg = XmlGetColumnValue(entry) as string;
+                        break;
+                }
             }
         }
 
-        static DecryptMaterial parse_backup_file_module_info(XmlDocument xmlEntry)
+        static DecryptMaterial ParseBackupFileModuleInfo(XmlDocument xmlEntry)
         {
             string aString = xmlEntry.FirstChild.Attributes["table"].Value;
             DecryptMaterial decm = new DecryptMaterial(aString);
@@ -55,24 +66,29 @@ namespace BackupViewer
             {
                 string name = entry.Attributes["name"].Value;
                 if (name == "encMsgV3")
-                    decm.EncMsgV3 = xml_get_column_value(entry) as string;
+                {
+                    decm.EncMsgV3 = XmlGetColumnValue(entry) as string;
+                }
                 else if (name == "checkMsgV3")
                 {
                     // TBR: reverse this double sized checkMsgV3.
                 }
                 else if (name == "name")
-                    decm.Name = xml_get_column_value(entry) as string;
+                {
+                    decm.Name = XmlGetColumnValue(entry) as string;
+                }
             }
 
-            if (decm.do_check() == false)
+            if (decm.DoCheck() == false)
+            {
                 return null;
+            }
 
             return decm;
         }
 
-        public static HybridDictionary parse_info_xml(string filepath, ref Decryptor decryptor, HybridDictionary decryptMaterialDict)
+        public static HybridDictionary ParseInfoXml(string filepath, ref Decryptor decryptor, HybridDictionary decryptMaterialDict)
         {
-            // Create the XmlDocument.
             XmlDocument infoDom = new XmlDocument();
             infoDom.Load(filepath);
 
@@ -95,7 +111,7 @@ namespace BackupViewer
                     case "BackupFilesTypeInfo":
                         doc = new XmlDocument();
                         doc.LoadXml(entry.OuterXml);
-                        parse_backup_files_type_info(ref decryptor, doc);
+                        ParseBackupFilesTypeInfo(ref decryptor, doc);
                         break;
                     case "BackupFileModuleInfo":
                     case "BackupFileModuleInfo_Contact":
@@ -103,7 +119,7 @@ namespace BackupViewer
                     case "BackupFileModuleInfo_SystemData":
                         doc = new XmlDocument();
                         doc.LoadXml(entry.OuterXml);
-                        DecryptMaterial decMaterial = parse_backup_file_module_info(doc);
+                        DecryptMaterial decMaterial = ParseBackupFileModuleInfo(doc);
                         if (decMaterial != null)
                         {
                             string dkey = Path.Combine(parent, decMaterial.Name);
@@ -116,7 +132,7 @@ namespace BackupViewer
             return decryptMaterialDict;
         }
 
-        public static HybridDictionary parse_xml(string filepath, HybridDictionary decryptMaterialDict)
+        public static HybridDictionary ParseXML(string filepath, HybridDictionary decryptMaterialDict)
         {
             XmlDocument xmlDom = new XmlDocument();
             xmlDom.Load(filepath);
@@ -133,8 +149,8 @@ namespace BackupViewer
                 {
                     DecryptMaterial decMaterial = new DecryptMaterial(Path.GetFileNameWithoutExtension(filepath));
                     // XML files use Windows style path separator, backslash.
-                    decMaterial.path = path;
-                    decMaterial.iv = iv;
+                    decMaterial.Path = path;
+                    decMaterial.IV = iv;
                     string dkey = Path.Combine(parent, path.TrimStart(new char[] { '\\' }));
                     decryptMaterialDict[dkey] = decMaterial;
                 }

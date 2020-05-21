@@ -15,31 +15,30 @@ namespace BackupViewer
 
         public void Handle(string pathIn, string pathOut, HybridDictionary decryptMaterialDict, Decryptor decryptor)
         {
-            if (encFiles.Count > 0)
+            if (encFiles.Count <= 0) return;
+            
+            for (int i = 1; i <= encFiles.Count; i++)
             {
-                for (int i = 1; i <= encFiles.Count; i++)
+                string entry = encFiles[i - 1];
+                byte[] cleartext = null;
+                DecryptMaterial decMaterial = null;
+                string directory = Path.GetDirectoryName(entry);
+                string filename = Path.GetFileNameWithoutExtension(entry);
+                string skey = Path.Combine(directory, filename);
+                if (decryptMaterialDict.Contains(skey))
                 {
-                    string entry = encFiles[i - 1];
-                    byte[] cleartext = null;
-                    DecryptMaterial decMaterial = null;
-                    string directory = Path.GetDirectoryName(entry);
-                    string filename = Path.GetFileNameWithoutExtension(entry);
-                    string skey = Path.Combine(directory, filename);
-                    if (decryptMaterialDict.Contains(skey))
-                    {
-                        decMaterial = (DecryptMaterial) decryptMaterialDict[skey];
-                        cleartext = decryptor.decrypt_file(decMaterial, File.ReadAllBytes(entry));
-                    }
+                    decMaterial = (DecryptMaterial) decryptMaterialDict[skey];
+                    cleartext = decryptor.DecryptFile(decMaterial, File.ReadAllBytes(entry));
+                }
 
-                    if (cleartext != null && decMaterial != null)
-                    {
-                        string destFile = pathOut;
-                        string tmpPath = decMaterial.path.TrimStart(new char[] {'\\', '/'});
-                        destFile = Path.Combine(destFile, tmpPath);
-                        string destDir = Directory.GetParent(destFile).FullName;
-                        Directory.CreateDirectory(destDir);
-                        File.WriteAllBytes(destFile, cleartext);
-                    }
+                if (cleartext != null && decMaterial != null)
+                {
+                    string destFile = pathOut;
+                    string tmpPath = decMaterial.Path.TrimStart(new char[] {'\\', '/'});
+                    destFile = Path.Combine(destFile, tmpPath);
+                    string destDir = Directory.GetParent(destFile).FullName;
+                    Directory.CreateDirectory(destDir);
+                    File.WriteAllBytes(destFile, cleartext);
                 }
             }
         }

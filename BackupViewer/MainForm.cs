@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Windows.Forms;
 using Ookii.Dialogs;
 
@@ -36,28 +35,39 @@ namespace BackupViewer
 
         private void StartDecrypting(object sender, EventArgs e)
         {
-            if (pathIn.Text != "" && pathOut.Text != "" && password.Text != "")
+            if (pathIn.Text == "")
             {
-                String message = "";
-                if (BackupDecryptor.TryDecrypt(pathIn.Text, pathOut.Text, password.Text, ref message))
-                {
-                    Form mod = new ViewDB(pathOut.Text);
-                    mod.Location = Location;
-                    mod.Owner = this;
-                    mod.Show();
-                    Hide();
-                }
-                else
-                {
-                    MessageBox.Show("Invalid parameters: " + message, "Error");
-                }
+                MessageBox.Show("Please enter your backup path", "Error");
+                return;
+            }
+
+            if (pathOut.Text == "")
+            {
+                MessageBox.Show("Please enter path for result files", "Error");
+                return;
+            }
+
+            if (password.Text == "")
+            {
+                MessageBox.Show("Please enter path for result files", "Error");
+                return;
+            }
+
+            String message = "";
+            if (BackupDecryptor.TryDecrypt(pathIn.Text, pathOut.Text, password.Text, ref message))
+            {
+                Form view = new ViewDB(pathOut.Text);
+                view.Location = Location;
+                view.Owner = this;
+                view.Show();
+                Hide();
             }
             else
             {
-                MessageBox.Show("Please fill the gaps", "Error");
+                MessageBox.Show("Invalid parameters: " + message, "Error");
             }
         }
-        
+
         private void Form1_Load(object sender, EventArgs e)
         {
             Activate();
